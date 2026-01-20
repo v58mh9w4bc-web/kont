@@ -20,16 +20,51 @@
     </style>
 </head>
 <body class="pastel-bg">
-    <!-- Header -->
-    <header class="bg-white shadow-sm py-5">
-        <div class="container mx-auto px-6 flex justify-between items-center">
-            <h1 class="text-3xl logo-font accent-color">КОНТИНЕНТ — CRM</h1>
-            <nav class="flex space-x-6">
-                <a href="index.html" class="text-gray-700 hover:text-gray-900 transition">Главная</a>
-                <a href="admin.html" class="text-gray-700 hover:text-gray-900 transition">Админ-панель</a>
-            </nav>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl logo-font accent-color mb-2">КОНТИНЕНТ</h1>
+                <h2 class="text-xl font-semibold text-gray-800">CRM-система</h2>
+                <p class="text-gray-600 text-sm mt-2">Введите пароль для доступа</p>
+            </div>
+            
+            <form onsubmit="checkPassword(event)">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Пароль</label>
+                    <input type="password" id="passwordInput" required 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+                        placeholder="Введите пароль">
+                </div>
+                
+                <button type="submit" class="w-full accent-bg hover-accent text-white py-3 rounded-lg font-semibold transition">
+                    Войти в систему
+                </button>
+            </form>
+            
+            <div id="errorMessage" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-red-800 text-sm">Неверный пароль. Попробуйте еще раз.</p>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-gray-500 hover:text-gray-700 text-sm">← Вернуться на главную</a>
+            </div>
         </div>
-    </header>
+    </div>
+
+    <!-- Main CRM Content (hidden by default) -->
+    <div id="crmContent" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm py-5">
+            <div class="container mx-auto px-6 flex justify-between items-center">
+                <h1 class="text-3xl logo-font accent-color">КОНТИНЕНТ — CRM</h1>
+                <nav class="flex space-x-6">
+                    <a href="index.html" class="text-gray-700 hover:text-gray-900 transition">Главная</a>
+                    <a href="admin.html" class="text-gray-700 hover:text-gray-900 transition">Админ-панель</a>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-800 transition">Выйти</button>
+                </nav>
+            </div>
+        </header>
     <!-- Main Content -->
     <main class="container mx-auto px-6 py-10">
         <div class="bg-white rounded-2xl shadow-lg p-8">
@@ -178,13 +213,7 @@
         let allBookings = [];
         let importedData = null;
 
-        // Загрузка при старте
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMastersFilter();
-            loadBookings();
-        });
-
-        // Загрузка мастеров в фильтр
+        // Загрузка мастеров в фильтр (только после авторизации)
         function loadMastersFilter() {
             const masters = JSON.parse(localStorage.getItem('masters') || '[]');
             const select = document.getElementById('filterMaster');
@@ -592,6 +621,49 @@
             link.download = `bookings_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
             URL.revokeObjectURL(url);
+        }
+    </script>
+    </div> <!-- End of crmContent -->
+
+    <script>
+        // Система авторизации
+        const CRM_PASSWORD = '00000'; // Пароль для CRM
+        
+        // Проверка авторизации при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('crmAuthorized') === 'true') {
+                showCRM();
+            }
+        });
+        
+        function checkPassword(event) {
+            event.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+            
+            if (password === CRM_PASSWORD) {
+                sessionStorage.setItem('crmAuthorized', 'true');
+                showCRM();
+            } else {
+                document.getElementById('errorMessage').classList.remove('hidden');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+        
+        function showCRM() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('crmContent').classList.remove('hidden');
+            // Инициализация CRM после авторизации
+            loadMastersFilter();
+            loadBookings();
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('crmAuthorized');
+            document.getElementById('crmContent').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('errorMessage').classList.add('hidden');
         }
     </script>
 </body>
